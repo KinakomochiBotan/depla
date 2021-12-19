@@ -69,7 +69,7 @@ impl Board {
     pub fn put(&mut self, index: BoardIndex) -> Result<()> {
 
         if !self.legal.is_set(index) {
-            return Result::Err(anyhow::anyhow!("{:?}", index));
+            return Result::Err(anyhow::anyhow!("cannot put a disc at {}", index));
         }
 
         let player = self.player.value();

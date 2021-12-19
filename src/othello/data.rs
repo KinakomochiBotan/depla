@@ -30,15 +30,8 @@ impl BoardData {
     }
 
     #[inline]
-    pub fn count(self) -> u8 {
-        [
-            (01, 0x5555555555555555),
-            (02, 0x3333333333333333),
-            (04, 0x0f0f0f0f0f0f0f0f),
-            (08, 0x00ff00ff00ff00ff),
-            (16, 0x0000ffff0000ffff),
-            (32, 0x00000000ffffffff)
-        ].into_iter().fold(self.value, |x, (shifts, mask)| (x & mask) + (x >> shifts & mask)) as u8
+    pub fn count(self) -> u32 {
+        self.value.count_ones()
     }
 
     #[inline]

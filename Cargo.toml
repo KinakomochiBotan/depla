@@ -9,7 +9,4 @@ itertools = "0.10.3"
 
 [dependencies.tokio]
 version = "1.14.0"
-features = [
-    "fs",
-    "io-util"
-]
+features = ["full"]

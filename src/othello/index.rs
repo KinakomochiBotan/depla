@@ -1,3 +1,9 @@
+use std::fmt::{
+    Display,
+    Formatter,
+    Result as FmtResult
+};
+
 use anyhow::Result;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -27,4 +33,11 @@ impl BoardIndex {
         self.value
     }
 
+}
+
+impl Display for BoardIndex {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", self.value)
+    }
 }
