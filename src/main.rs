@@ -1,3 +1,4 @@
+mod io;
 mod othello;
 
 fn main() {
