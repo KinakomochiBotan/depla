@@ -1,14 +1,8 @@
-use std::fmt::{
-    Display,
-    Formatter,
-    Result as FmtResult
-};
-
 use anyhow::Result;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct BoardIndex {
-    value: u8
+    value: usize
 }
 
 impl BoardIndex {
@@ -17,7 +11,7 @@ impl BoardIndex {
     pub fn of(index: usize) -> Result<Self> {
         match index < 64 {
             true => Result::Ok(Self {
-                value: index as u8
+                value: index
             }),
             false => Result::Err(anyhow::anyhow!("an index must be less than 64, but it was {}", index))
         }
@@ -29,15 +23,8 @@ impl BoardIndex {
     }
 
     #[inline]
-    pub const fn value(self) -> u8 {
+    pub const fn value(self) -> usize {
         self.value
     }
 
-}
-
-impl Display for BoardIndex {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self.value)
-    }
 }

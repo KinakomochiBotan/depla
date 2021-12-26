@@ -1,4 +1,4 @@
-use super::index::BoardIndex;
+use super::BoardIndex;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct BoardData {
