@@ -19,24 +19,27 @@ use itertools::Itertools;
 use tokio::runtime::Runtime;
 
 #[inline]
-pub fn read<P: 'static + AsRef<Path> + Send, I: IntoIterator<Item = P>>(paths: I) -> Result<Vec<Vec<Vec<([f32; 64], [f32; 64], [f32; 64])>>>> {
+pub fn parse<P: 'static + AsRef<Path> + Send, I: IntoIterator<Item = P>>(paths: I) -> Result<(Vec<Vec<Vec<([f32; 64], [f32; 64], [f32; 64])>>>, Vec<(usize, usize, usize)>)> {
     Runtime::new()?.block_on(async {
-        let handles = paths.into_iter().map(|path| tokio::spawn(parse_file(path))).collect_vec();
-        let mut result = Vec::new();
+        let handles = paths.into_iter().enumerate().map(|(index, path)| tokio::spawn(parse_file(path, index))).collect_vec();
+        let mut boards = Vec::with_capacity(handles.len());
+        let mut indexes = Vec::new();
 
         for handle in handles {
-            result.push(handle.await??);
+            let mut result = handle.await??;
+            boards.push(result.0);
+            indexes.append(&mut result.1);
         }
 
-        Result::Ok(result)
+        Result::Ok((boards, indexes))
     })
 }
 
 #[inline]
-async fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<([f32; 64], [f32; 64], [f32; 64])>>> {
+async fn parse_file<P: AsRef<Path>>(path: P, year: usize) -> Result<(Vec<Vec<([f32; 64], [f32; 64], [f32; 64])>>, Vec<(usize, usize, usize)>)> {
     let mut reader = FileReader::new(path).await?;
     reader.seek(4).await?;
-    let games = u32::from_le_bytes(reader.read().await?);
+    let games = u32::from_le_bytes(reader.read().await?) as usize;
     reader.seek(4).await?;
     let size = u8::from_le_bytes(reader.read().await?);
 
@@ -45,26 +48,28 @@ async fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<([f32; 64], [f32;
     }
 
     reader.seek(3).await?;
-    let mut buffer = Vec::new();
+    let mut boards = Vec::with_capacity(games);
+    let mut indexes = Vec::new();
 
-    for _ in 0..games {
+    for game in 0..games {
         reader.seek(6).await?;
         let discs = u8::from_le_bytes(reader.read().await?);
         reader.seek(1).await?;
         let moves: [u8; 60] = reader.read().await?;
         let mut players = WTHORPlayers::new(discs, moves);
-        crate::othello::run(&mut players);
-        buffer.push(players.result);
+        crate::othello::run(&mut players)?;
+        indexes.extend((0..players.boards.len()).map(|board| (year, game, board)));
+        boards.push(players.boards);
     }
 
-    return Result::Ok(buffer);
+    return Result::Ok((boards, indexes));
 }
 
 struct WTHORPlayers {
     moves: IntoIter<u8, 60>,
     learn_black: bool,
     learn_white: bool,
-    result: Vec<([f32; 64], [f32; 64], [f32; 64])>
+    boards: Vec<([f32; 64], [f32; 64], [f32; 64])>
 }
 
 impl WTHORPlayers {
@@ -74,7 +79,7 @@ impl WTHORPlayers {
             moves: moves.into_iter(),
             learn_black: discs >= 32,
             learn_white: discs <= 32,
-            result: Vec::new()
+            boards: Vec::new()
         }
     }
 }
@@ -101,7 +106,7 @@ impl WTHORPlayers {
 
     #[inline]
     fn push(&mut self, player: BoardData, opponent: BoardData, position: BoardData) {
-        self.result.push((to_array(player), to_array(opponent), to_array(position)))
+        self.boards.push((to_array(player), to_array(opponent), to_array(position)))
     }
 
 }
@@ -151,3 +156,4 @@ fn flip_diagonal(data: BoardData) -> BoardData {
         value ^ (mask ^ (mask >> shifts))
     }))
 }
+

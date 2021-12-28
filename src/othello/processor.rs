@@ -26,7 +26,7 @@ pub trait Players {
 }
 
 #[inline]
-pub fn run<P: Players>(mut players: &mut P) -> Result<()> {
+pub fn run<P: Players>(players: &mut P) -> Result<()> {
     let mut game = Board::new();
     let mut player_type = PlayerType::Black;
     let mut will_pass = false;

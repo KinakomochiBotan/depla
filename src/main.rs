@@ -2,12 +2,8 @@ mod io;
 mod othello;
 mod wthor;
 
-use anyhow::Result;
-
-fn main() -> Result<()> {
-    let start = std::time::SystemTime::now();
-    let result = crate::wthor::read((2010..=2020).map(|year| format!("wthor/WTH_{}.wtb", year)))?;
-    let end = std::time::SystemTime::now();
-    println!("{}", end.duration_since(start)?.as_secs_f64());
-    return Result::Ok(());
+fn main() {
+    let (boards, indexes) = crate::wthor::parse((2010..=2020).map(|year| format!("wthor/WTH_{}.wtb", year))).unwrap();
+    println!("{}", boards.into_iter().map(|vec| vec.into_iter().map(|vec| vec.len()).sum::<usize>()).sum::<usize>());
+    println!("{}", indexes.len());
 }
