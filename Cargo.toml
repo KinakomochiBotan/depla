@@ -11,3 +11,7 @@ rand = "0.8.4"
 [dependencies.tokio]
 version = "1.14.0"
 features = ["full"]
+
+[dependencies.pyo3]
+version = "0.15.1"
+features = ["auto-initialize"]
