@@ -11,13 +11,19 @@ class AI:
         self.__criterion = CrossEntropyLoss()
         self.__optimizer = SGD(self.__cnn.parameters(), lr=0.0001, momentum=0.9, weight_decay=0.005)
 
-    def __tensor(self, data):
+    def tensor(self, data):
         return torch.tensor(data, device=self.__device)
 
     def guess(self, player, opponent):
         self.__optimizer.zero_grad()
-        return self.__cnn(self.__tensor([[player, opponent]])).tolist()[0]
+        return self.__cnn(self.tensor([[player, opponent]])).tolist()[0]
 
     def train(self, data, label):
-        self.__criterion(self.__cnn(self.__tensor(data)), self.__tensor(label)).backward()
+        self.__criterion(self.__cnn(self.tensor(data)), self.tensor(label)).backward()
         self.__optimizer.step()
+
+
+class AITrainer:
+    def __init__(self, data):
+        self.__ai = AI()
+        self.__data = list(map(self.__ai.tensor, data))

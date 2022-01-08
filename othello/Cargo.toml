@@ -1,0 +1,8 @@
+[package]
+name = "othello"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.51"
+rand = "0.8.4"
