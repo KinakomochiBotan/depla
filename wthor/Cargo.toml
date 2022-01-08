@@ -1,0 +1,28 @@
+[package]
+name = "wthor"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "wthor"
+crate-type = ["cdylib"]
+
+[dependencies]
+anyhow = "1.0.51"
+ndarray = "0.15.4"
+numpy = "0.15.0"
+
+[dependencies.othello]
+path = "../othello"
+
+[dependencies.tokio]
+version = "1.14.0"
+features = ["io-util"]
+
+[dependencies.pyo3]
+version = "0.15.1"
+features = ["extension-module", "anyhow"]
+
+[dependencies.pyo3-asyncio]
+version = "0.15.0"
+features = ["tokio-runtime"]

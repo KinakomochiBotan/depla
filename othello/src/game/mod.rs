@@ -138,7 +138,7 @@ pub trait Players {
     fn get_move(&mut self, game: &Game) -> Result<Index>;
 
     #[inline]
-    fn run(mut self) -> Result<(u32, u32)> where Self: Sized {
+    fn run(&mut self) -> Result<(u32, u32)> where Self: Sized {
         let mut game = Game::new();
         let mut will_pass = false;
 
