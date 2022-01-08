@@ -73,7 +73,17 @@ impl Game {
     }
 
     #[inline]
-    fn black(&self) -> Data {
+    pub fn board(&self) -> Board {
+        self.board
+    }
+
+    #[inline]
+    pub fn player_type(&self) -> PlayerType {
+        self.player_type
+    }
+
+    #[inline]
+    pub fn black(&self) -> Data {
         match self.player_type {
             PlayerType::Black => self.board.player(),
             PlayerType::White => self.board.opponent()
@@ -81,7 +91,7 @@ impl Game {
     }
 
     #[inline]
-    fn white(&self) -> Data {
+    pub fn white(&self) -> Data {
         match self.player_type {
             PlayerType::Black => self.board.opponent(),
             PlayerType::White => self.board.player()

@@ -1,7 +1,9 @@
 mod human;
+mod random;
 
 pub use self::{
-    human::HumanPlayer
+    human::HumanPlayer,
+    random::RandomPlayer
 };
 
 use crate::Index;
