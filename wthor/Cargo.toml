@@ -8,15 +8,15 @@ name = "wthor"
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "1.0.51"
+anyhow = "1.0.52"
 ndarray = "0.15.4"
-numpy = "0.15.0"
+numpy = "0.15.1"
 
 [dependencies.othello]
 path = "../othello"
 
 [dependencies.tokio]
-version = "1.14.0"
+version = "1.15.0"
 features = ["rt-multi-thread", "sync", "fs", "io-util"]
 
 [dependencies.pyo3]

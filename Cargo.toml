@@ -7,12 +7,12 @@ edition = "2021"
 members = ["othello", "wthor"]
 
 [dependencies]
-anyhow = "1.0.51"
+anyhow = "1.0.52"
 itertools = "0.10.3"
 rand = "0.8.4"
 
 [dependencies.tokio]
-version = "1.14.0"
+version = "1.15.0"
 features = ["full"]
 
 [dependencies.pyo3]
