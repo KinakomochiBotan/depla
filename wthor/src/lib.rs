@@ -3,16 +3,26 @@ mod data;
 mod players;
 mod parser;
 
-use tokio::runtime::Runtime;
+use crate::{
+    parser::Dataset as ParserDataset,
+    data::Dataset
+};
+
+use anyhow::Result;
+
+use tokio::{
+    runtime::Runtime,
+    sync::mpsc::Receiver
+};
 
 use pyo3::{
     Python,
     PyResult,
     IntoPy,
-    PyObject,
+    Py,
     types::{
         PyModule,
-        PyList
+        PyTuple
     }
 };
 
@@ -22,25 +32,27 @@ fn wthor(_: Python, module: &PyModule) -> PyResult<()> {
 }
 
 #[pyo3::pyfunction]
-fn parse(python: Python, paths: &PyList) -> PyResult<PyObject> {
+fn parse(python: Python, paths: Vec<String>) -> PyResult<Py<PyTuple>> {
+    let length = paths.len();
     let runtime = Runtime::new()?;
-    let (sender, mut receiver) = tokio::sync::mpsc::channel(paths.len());
+    let (sender, receiver) = tokio::sync::mpsc::channel(length);
 
     for path in paths {
-        runtime.spawn(crate::parser::parse(path.extract::<String>()?, sender.clone()));
+        runtime.spawn(crate::parser::parse(path, sender.clone()));
     }
 
     std::mem::drop(sender);
 
-    return Result::Ok(runtime.block_on(async {
-        let mut result = Vec::new();
+    #[inline]
+    async fn collect(capacity: usize, mut receiver: Receiver<Result<ParserDataset>>) -> Result<Dataset> {
+        let mut result = Dataset::new(capacity);
 
         while let Option::Some(data) = receiver.recv().await {
-            result.reserve(data.iter().map(|vec| vec.len()).sum());
-            data.into_iter().for_each(|mut vec| result.append(&mut vec));
+            result.push(data?);
         }
 
-        return result;
-    }).into_py(python));
+        return Result::Ok(result);
+    }
 
+    return Result::Ok(runtime.block_on(collect(length, receiver))?.into_py(python));
 }

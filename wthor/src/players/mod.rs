@@ -1,10 +1,13 @@
-use crate::data::TrainData;
+mod dataset;
+
+pub use self::dataset::Dataset;
+use crate::data::Data;
 use std::array::IntoIter;
 use anyhow::Result;
 
 use othello::{
     Index,
-    Data,
+    Data as OthelloData,
     game::{
         PlayerType,
         Game,
@@ -12,11 +15,12 @@ use othello::{
     }
 };
 
+#[derive(Clone, Debug)]
 pub struct WTHORPlayers {
     learn_black: bool,
     learn_white: bool,
     moves: IntoIter<u8, 60>,
-    result: Vec<TrainData>
+    dataset: Dataset
 }
 
 impl WTHORPlayers {
@@ -27,35 +31,13 @@ impl WTHORPlayers {
             learn_black: discs >= 32,
             learn_white: discs <= 32,
             moves: moves.into_iter(),
-            result: Vec::new()
+            dataset: Dataset::new()
         }
     }
 
     #[inline]
-    fn push(&mut self, player: Data, opponent: Data, index: Index) {
-        let mut push = |data: TrainData| self.result.push(data);
-
-        let mut push2 = |data: TrainData| {
-            push(data);
-            push(data.flip_vertical());
-        };
-
-        let mut push4 = |data: TrainData| {
-            push2(data);
-            push2(data.rotate180());
-        };
-
-        let mut push8 = |data: TrainData| {
-            push4(data);
-            push4(data.flip_diagonal());
-        };
-
-        push8(TrainData::new(player, opponent, Data::of(0).set(index)));
-    }
-
-    #[inline]
-    pub fn result(self) -> Vec<TrainData> {
-        self.result
+    pub fn dataset(self) -> Dataset {
+        self.dataset
     }
 
 }
@@ -70,7 +52,7 @@ impl Players for WTHORPlayers {
             PlayerType::Black => self.learn_black,
             PlayerType::White => self.learn_white
         } {
-            self.push(game.board().player(), game.board().opponent(), index);
+            self.dataset.push(Data::new(game.board().player(), game.board().opponent(), OthelloData::of(0).set(index)));
         }
 
         return Result::Ok(index);

@@ -1,3 +1,7 @@
+mod dataset;
+
+pub use self::dataset::Dataset;
+
 use ndarray::{
     Array2,
     Array3
@@ -5,28 +9,29 @@ use ndarray::{
 
 use othello::{
     Index,
-    Data
+    Data as OthelloData
 };
 
 use pyo3::{
     Python,
     IntoPy,
-    PyObject
+    Py,
+    types::PyTuple,
 };
 
 use numpy::IntoPyArray;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct TrainData {
-    player: Data,
-    opponent: Data,
-    position: Data
+pub struct Data {
+    player: OthelloData,
+    opponent: OthelloData,
+    position: OthelloData
 }
 
-impl TrainData {
+impl Data {
 
     #[inline]
-    pub fn new(player: Data, opponent: Data, position: Data) -> Self {
+    pub fn new(player: OthelloData, opponent: OthelloData, position: OthelloData) -> Self {
         Self {
             player,
             opponent,
@@ -36,20 +41,20 @@ impl TrainData {
 
     #[inline]
     pub fn flip_vertical(&self) -> Self {
-        let flip_vertical = |data: Data| Data::of(data.value().swap_bytes());
+        let flip_vertical = |data: OthelloData| OthelloData::of(data.value().swap_bytes());
         return Self::new(flip_vertical(self.player), flip_vertical(self.opponent), flip_vertical(self.position));
     }
 
     #[inline]
     pub fn rotate180(&self) -> Self {
-        let rotate180 = |data: Data| Data::of(data.value().reverse_bits());
+        let rotate180 = |data: OthelloData| OthelloData::of(data.value().reverse_bits());
         return Self::new(rotate180(self.player), rotate180(self.opponent), rotate180(self.position));
     }
 
     #[inline]
     pub fn flip_diagonal(&self) -> Self {
 
-        let flip_diagonal = |data: Data| {
+        let flip_diagonal = |data: OthelloData| {
             let mut result = data.value();
 
             for (n, mask) in [
@@ -61,7 +66,7 @@ impl TrainData {
                 result ^= mask ^ (mask >> n);
             }
 
-            return Data::of(result);
+            return OthelloData::of(result);
         };
 
         return Self::new(flip_diagonal(self.player), flip_diagonal(self.opponent), flip_diagonal(self.position));
@@ -69,9 +74,9 @@ impl TrainData {
 
 }
 
-impl IntoPy<PyObject> for TrainData {
+impl IntoPy<Py<PyTuple>> for Data {
     #[inline]
-    fn into_py(self, py: Python) -> PyObject {
+    fn into_py(self, py: Python) -> Py<PyTuple> {
         let mut data = Array3::<f32>::zeros((2, 8, 8));
         let mut label = Array2::<f32>::zeros((8, 8));
 

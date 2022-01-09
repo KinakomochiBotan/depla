@@ -64,11 +64,7 @@ impl Board {
 
     #[inline]
     pub fn put(&mut self, index: Index) -> Result<()> {
-
-        if !self.legal.is_set(index) {
-            return Result::Err(anyhow::anyhow!("cannot put a disc at {}", index));
-        }
-
+        anyhow::ensure!(self.legal.is_set(index), "cannot put a disc at {}", index);
         let player = self.player.value();
         let opponent = self.opponent.value();
         let position = Data::of(0).set(index).value();

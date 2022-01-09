@@ -14,6 +14,7 @@ use tokio::{
     }
 };
 
+#[derive(Debug)]
 pub struct FileReader {
     reader: BufReader<File>
 }

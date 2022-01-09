@@ -14,23 +14,22 @@ pub struct Index {
 impl Index {
 
     #[inline]
-    pub fn of(value: usize) -> Result<Self> {
-        match value < 64 {
-            true => Result::Ok(Self {
-                value
-            }),
-            false => Result::Err(anyhow::anyhow!("an index must be less than 64, but it was {}", value))
+    fn new(value: usize) -> Self {
+        Self {
+            value
         }
     }
 
     #[inline]
+    pub fn of(value: usize) -> Result<Self> {
+        anyhow::ensure!(value < 64, "an index must be less than 64, but it was {}", value);
+        return Result::Ok(Self::new(value));
+    }
+
+    #[inline]
     pub fn at(row: usize, column: usize) -> Result<Self> {
-        match row < 8 && column < 8 {
-            true => Result::Ok(Self {
-                value: 8 * row + column
-            }),
-            false => Result::Err(anyhow::anyhow!("a row and a column must be less than 8, but it was {} and {}", row, column))
-        }
+        anyhow::ensure!(row < 8 && column < 8, "a row and a column must be less than 8, but it was {} and {}", row, column);
+        return Result::Ok(Self::new(8 * row + column));
     }
 
     #[inline]
