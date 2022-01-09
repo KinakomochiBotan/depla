@@ -1,15 +1,16 @@
 use crate::{
-    data::TrainData,
     io::FileReader,
+    data::TrainData,
     players::WTHORPlayers
 };
 
 use std::path::Path;
 use anyhow::Result;
+use tokio::sync::mpsc::Sender;
 use othello::game::Players;
 
 #[inline]
-pub async fn parse<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<TrainData>>> {
+pub async fn parse<P: AsRef<Path>>(path: P, sender: Sender<Vec<Vec<TrainData>>>) -> Result<()> {
     let mut reader = FileReader::new(path).await?;
     reader.seek(4).await?;
     let games = u32::from_le_bytes(reader.read().await?) as usize;
@@ -21,7 +22,7 @@ pub async fn parse<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<TrainData>>> {
     }
 
     reader.seek(3).await?;
-    let mut boards = Vec::with_capacity(games);
+    let mut result = Vec::with_capacity(games);
 
     for _ in 0..games {
         reader.seek(6).await?;
@@ -30,8 +31,9 @@ pub async fn parse<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<TrainData>>> {
         let moves = reader.read().await?;
         let mut players = WTHORPlayers::new(discs, moves);
         players.run()?;
-        boards.push(players.boards());
+        result.push(players.result());
     }
 
-    return Result::Ok(boards);
+    sender.send(result).await?;
+    return Result::Ok(());
 }

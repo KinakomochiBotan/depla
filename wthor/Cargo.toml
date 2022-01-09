@@ -17,12 +17,8 @@ path = "../othello"
 
 [dependencies.tokio]
 version = "1.14.0"
-features = ["io-util"]
+features = ["rt-multi-thread", "sync", "fs", "io-util"]
 
 [dependencies.pyo3]
 version = "0.15.1"
 features = ["extension-module", "anyhow"]
-
-[dependencies.pyo3-asyncio]
-version = "0.15.0"
-features = ["tokio-runtime"]

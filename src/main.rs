@@ -2,18 +2,15 @@ mod io;
 mod othello;
 mod wthor;
 
-use ::othello::game::{
-    Players,
-    player::{
-        DefaultPlayers,
-        HumanPlayer,
-        RandomPlayer
-    }
-};
+use anyhow::Result;
 
-fn main() {
-    let black = HumanPlayer::new();
-    let white = RandomPlayer::new(rand::thread_rng());
-    let (row, column) = DefaultPlayers::new(black, white).run().unwrap();
-    println!("{} vs {}", row, column);
+fn main() -> Result<()> {
+    let data = crate::wthor::parse((2010..=2020).map(|year| format!("wthor_data/WTH_{}.wtb", year)))?;
+    println!("{}", data.1.len());
+    return Result::Ok(());
 }
+
+// 5416528
+// 5416528
+// 5416528
+// 5416528

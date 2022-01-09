@@ -1,26 +1,46 @@
+mod io;
 mod data;
 mod players;
-mod io;
 mod parser;
+
+use tokio::runtime::Runtime;
 
 use pyo3::{
     Python,
     PyResult,
-    PyAny,
+    IntoPy,
+    PyObject,
     types::{
-        PyModule
+        PyModule,
+        PyList
     }
 };
 
-#[pyo3::pyfunction]
-fn parse(python: Python, path: String) -> PyResult<&PyAny> {
-    pyo3_asyncio::tokio::future_into_py(python, async {
-        let result = crate::parser::parse(path).await?;
-        Result::Ok(result)
-    })
+#[pyo3::pymodule]
+fn wthor(_: Python, module: &PyModule) -> PyResult<()> {
+    module.add_function(pyo3::wrap_pyfunction!(parse, module)?)
 }
 
-#[pyo3::pymodule]
-fn wthor(_python: Python, module: &PyModule) -> PyResult<()> {
-    module.add_function(pyo3::wrap_pyfunction!(parse, module)?)
+#[pyo3::pyfunction]
+fn parse(python: Python, paths: &PyList) -> PyResult<PyObject> {
+    let runtime = Runtime::new()?;
+    let (sender, mut receiver) = tokio::sync::mpsc::channel(paths.len());
+
+    for path in paths {
+        runtime.spawn(crate::parser::parse(path.extract::<String>()?, sender.clone()));
+    }
+
+    std::mem::drop(sender);
+
+    return Result::Ok(runtime.block_on(async {
+        let mut result = Vec::new();
+
+        while let Option::Some(data) = receiver.recv().await {
+            result.reserve(data.iter().map(|vec| vec.len()).sum());
+            data.into_iter().for_each(|mut vec| result.append(&mut vec));
+        }
+
+        return result;
+    }).into_py(python));
+
 }
