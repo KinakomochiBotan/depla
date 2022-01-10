@@ -1,6 +1,10 @@
 use anyhow::Result;
 
-use ndarray::Array2;
+use ndarray::{
+    Array3,
+    Array4
+};
+
 use rand::Rng;
 
 use othello::{
@@ -14,12 +18,11 @@ use othello::{
 use pyo3::{
     Python,
     Py,
-    PyAny,
-    types::PyModule
+    PyAny
 };
 
 use numpy::{
-    PyArray2,
+    PyArray3,
     IntoPyArray
 };
 
@@ -36,7 +39,8 @@ impl<R> AI<R> {
 
         #[inline]
         fn get_ai(python: Python) -> Result<Py<PyAny>> {
-            Result::Ok(Py::from(PyModule::from_code(python, include_str!("airs.py"), "airs.py", "airs")?.getattr("get_ai")?.call0()?))
+            python.import("sys")?.getattr("path")?.call_method1("append", ("run/python",))?;
+            return Result::Ok(Py::from(python.import("ai")?.getattr("AI")?.call0()?));
         }
 
         Result::Ok(Self {
@@ -51,32 +55,31 @@ impl<R> AI<R> {
 impl<R: Rng> Player for AI<R> {
     #[inline]
     fn get_move(&mut self, game: &Game) -> Result<Index> {
-        let player_data = game.board().player();
-        let opponent_data = game.board().opponent();
-        let mut player = Array2::from_elem((8, 8), 0.0f32);
-        let mut opponent = Array2::from_elem((8, 8), 0.0f32);
+        let player = game.board().player();
+        let opponent = game.board().opponent();
+        let mut data = Array4::zeros((1, 2, 8, 8));
 
         for row in 0..8 {
             for column in 0..8 {
                 let index = Index::at(row, column).unwrap();
 
-                if player_data.is_set(index) {
-                    player[(row, column)] = 1.0;
+                if player.is_set(index) {
+                    data[(0, 0, row, column)] = 1.0;
                 }
 
-                if opponent_data.is_set(index) {
-                    opponent[(row, column)] = 1.0;
+                if opponent.is_set(index) {
+                    data[(0, 1, row, column)] = 1.0;
                 }
 
             }
         }
 
         #[inline]
-        fn get_output(python: Python, ai: &Py<PyAny>, player: Array2<f32>, opponent: Array2<f32>) -> Result<Array2<f32>>{
-            Result::Ok(ai.call_method1(python, "guess", (player.into_pyarray(python), opponent.into_pyarray(python)))?.extract::<&PyArray2<f32>>(python)?.to_owned_array())
+        fn get_output(python: Python, ai: &Py<PyAny>, data: Array4<f32>) -> Result<Array3<f32>> {
+            Result::Ok(ai.call_method1(python, "guess", (data.into_pyarray(python),))?.extract::<&PyArray3<f32>>(python)?.to_owned_array())
         }
 
-        let output: Array2<f32> = Python::with_gil(|python| get_output(python, &self.ai, player, opponent))?;
+        let output: Array3<f32> = Python::with_gil(|python| get_output(python, &self.ai, data))?;
         self.buffer.clear();
         let legal = game.board().legal();
         let mut min = f32::NEG_INFINITY;
@@ -86,7 +89,7 @@ impl<R: Rng> Player for AI<R> {
                 let index = Index::at(row, column).unwrap();
 
                 if legal.is_set(index) {
-                    let value = output[(row, column)];
+                    let value = output[(0, row, column)];
 
                     if value > min {
                         self.buffer.clear();

@@ -20,6 +20,7 @@ fn main() -> Result<()> {
     let mut black = 0;
     let mut draw = 0;
     let mut white = 0;
+    println!("ai vs random");
 
     for _ in 0..10000 {
         let count = players.run()?;
@@ -33,9 +34,11 @@ fn main() -> Result<()> {
     }
 
     println!("black: {}, draw: {}, white: {}", black, draw, white);
+    println!("human vs ai");
     let (ai, _) = players.to();
     let human = HumanPlayer::new();
     let mut players = DefaultPlayers::new(human, ai);
-    players.run()?;
+    let count = players.run()?;
+    println!("{} vs {}", count.0, count.1);
     return Result::Ok(());
 }

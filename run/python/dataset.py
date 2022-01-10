@@ -4,15 +4,13 @@ import wthor
 
 
 class WTHORDataset(Dataset):
-    def __init__(self, device, paths):
-        print('start loading wthor dataset')
-        data = wthor.parse(paths)
-        generator = ((torch.from_numpy(data).to(device), torch.from_numpy(label).to(device)) for (data, label) in data)
+    def __init__(self, paths):
+        print('load wthor dataset')
+        generator = ((torch.from_numpy(data), torch.from_numpy(label)) for (data, label) in wthor.parse(paths))
         self.__train = tuple(generator)
-        print('end loading wthor dataset')
 
     def __len__(self):
-        return len(self.__train)
+        return self.__train.__len__()
 
-    def __getitem__(self, item):
-        return self.__train[item]
+    def __getitem__(self, index):
+        return self.__train.__getitem__(index)
