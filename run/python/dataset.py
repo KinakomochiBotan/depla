@@ -1,13 +1,15 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 import wthor
 
 
 class WTHORDataset(Dataset):
     def __init__(self, device, paths):
+        print('start loading wthor dataset')
         data = wthor.parse(paths)
         generator = ((torch.from_numpy(data).to(device), torch.from_numpy(label).to(device)) for (data, label) in data)
         self.__train = tuple(generator)
+        print('end loading wthor dataset')
 
     def __len__(self):
         return len(self.__train)

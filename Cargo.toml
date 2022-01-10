@@ -8,12 +8,9 @@ members = ["othello", "wthor"]
 
 [dependencies]
 anyhow = "1.0.52"
-itertools = "0.10.3"
 rand = "0.8.4"
-
-[dependencies.tokio]
-version = "1.15.0"
-features = ["full"]
+ndarray = "0.15.4"
+numpy = "0.15.1"
 
 [dependencies.pyo3]
 version = "0.15.1"

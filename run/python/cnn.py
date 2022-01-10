@@ -15,7 +15,6 @@ class CNN(Module):
         self.__pool2 = MaxPool2d(3, 1)
         self.__linear1 = Linear(128 * 16, 128 * 2, device=device)
         self.__linear2 = Linear(128 * 2, 64, device=device)
-        self.__softmax = softmax
 
     def forward(self, x):
         x = relu(self.__conv11(x))
@@ -29,6 +28,6 @@ class CNN(Module):
         x = x.flatten(1)
         x = self.__linear1(x)
         x = self.__linear2(x)
-        x = softmax(x)
+        x = softmax(x, 1)
         x = x.view(-1, 8, 8)
         return x

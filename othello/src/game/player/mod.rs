@@ -26,6 +26,7 @@ pub struct DefaultPlayers<B, W> {
 }
 
 impl<B, W> DefaultPlayers<B, W> {
+
     #[inline]
     pub fn new(black: B, white: W) -> Self {
         Self {
@@ -33,6 +34,12 @@ impl<B, W> DefaultPlayers<B, W> {
             white
         }
     }
+
+    #[inline]
+    pub fn to(self) -> (B, W) {
+        (self.black, self.white)
+    }
+
 }
 
 impl<B: Player, W: Player> Players for DefaultPlayers<B, W> {
