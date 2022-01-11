@@ -18,8 +18,6 @@ use tokio::{
 use pyo3::{
     Python,
     PyResult,
-    IntoPy,
-    Py,
     types::{
         PyModule,
         PyTuple
@@ -32,7 +30,7 @@ fn wthor(_: Python, module: &PyModule) -> PyResult<()> {
 }
 
 #[pyo3::pyfunction]
-fn parse(python: Python, paths: Vec<String>) -> PyResult<Py<PyTuple>> {
+fn parse(python: Python, paths: Vec<String>) -> PyResult<&PyTuple> {
     let length = paths.len();
     let runtime = Runtime::new()?;
     let (sender, receiver) = tokio::sync::mpsc::channel(length);
@@ -54,5 +52,5 @@ fn parse(python: Python, paths: Vec<String>) -> PyResult<Py<PyTuple>> {
         return Result::Ok(result);
     }
 
-    return Result::Ok(runtime.block_on(collect(length, receiver))?.into_py(python));
+    return Result::Ok(runtime.block_on(collect(length, receiver))?.to(python)?);
 }

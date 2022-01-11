@@ -1,4 +1,15 @@
-pub mod player;
+mod player;
+mod human;
+mod random;
+
+pub use self::{
+    player::{
+        Player,
+        DefaultPlayers
+    },
+    human::HumanPlayer,
+    random::RandomPlayer
+};
 
 use crate::{
     Index,

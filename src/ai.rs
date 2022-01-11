@@ -11,14 +11,15 @@ use othello::{
     Index,
     game::{
         Game,
-        player::Player
+        Player
     }
 };
 
 use pyo3::{
     Python,
     Py,
-    PyAny
+    PyAny,
+    types::IntoPyDict
 };
 
 use numpy::{
@@ -39,8 +40,17 @@ impl<R> AI<R> {
 
         #[inline]
         fn get_ai(python: Python) -> Result<Py<PyAny>> {
-            python.import("sys")?.getattr("path")?.call_method1("append", ("run/python",))?;
-            return Result::Ok(Py::from(python.import("ai")?.getattr("AI")?.call0()?));
+            python.import("sys")?.getattr("path")?.call_method1("append", ("run",))?;
+            let torch = python.import("torch")?;
+            let depla = python.import("depla")?;
+            let device = torch.call_method1("device", ("cuda",))?;
+            let cnn = depla.call_method1("CNN", (8, 128, 128 * 8, device))?;
+            let dataset = depla.call_method1("Dataset", ((2010..=2020).map(|year| format!("run/wthor/WTH_{}.wtb", year)).collect::<Vec<_>>(),))?;
+            let loader = torch.getattr("utils")?.getattr("data")?.call_method("DataLoader", (dataset, 1024, true), Option::Some(vec![("drop_last", true)].into_py_dict(python)))?;
+            let criterion = torch.getattr("nn")?.call_method0("CrossEntropyLoss")?;
+            let optimizer = torch.getattr("optim")?.call_method("SGD", (cnn.call_method0("parameters")?, 0.0001, 0.9), Option::Some(vec![("weight_decay", 0.005)].into_py_dict(python)))?;
+            let ai = depla.call_method1("AI", (cnn, loader, 16, criterion, optimizer, device))?;
+            return Result::Ok(Py::from(ai));
         }
 
         Result::Ok(Self {
@@ -82,7 +92,7 @@ impl<R: Rng> Player for AI<R> {
         let output: Array3<f32> = Python::with_gil(|python| get_output(python, &self.ai, data))?;
         self.buffer.clear();
         let legal = game.board().legal();
-        let mut min = f32::NEG_INFINITY;
+        let mut max = f32::NEG_INFINITY;
 
         for row in 0..8 {
             for column in 0..8 {
@@ -91,11 +101,11 @@ impl<R: Rng> Player for AI<R> {
                 if legal.is_set(index) {
                     let value = output[(0, row, column)];
 
-                    if value > min {
+                    if value > max {
                         self.buffer.clear();
                         self.buffer.push(index);
-                        min = value;
-                    } else if value >= min {
+                        max = value;
+                    } else if value == max {
                         self.buffer.push(index);
                     }
 

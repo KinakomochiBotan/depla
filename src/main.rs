@@ -6,23 +6,32 @@ use anyhow::Result;
 
 use othello::game::{
     Players,
-    player::{
-        DefaultPlayers,
-        HumanPlayer,
-        RandomPlayer
-    }
+    Player,
+    DefaultPlayers,
+    HumanPlayer,
+    RandomPlayer
 };
 
 fn main() -> Result<()> {
-    let ai = AI::new(rand::thread_rng())?;
-    let random = RandomPlayer::new(rand::thread_rng());
-    let mut players = DefaultPlayers::new(ai, random);
-    let mut black = 0;
-    let mut draw = 0;
-    let mut white = 0;
-    println!("ai vs random");
+    let mut ai = AI::new(rand::thread_rng())?;
+    let mut random = RandomPlayer::new(rand::thread_rng());
+    println!("AI vs Random Player");
+    run(&mut ai, &mut random, 10000)?;
+    let mut human = HumanPlayer::new();
+    println!("Human vs AI");
+    println!();
+    run(&mut human, &mut ai, 10)?;
+    return Result::Ok(());
+}
 
-    for _ in 0..10000 {
+#[inline]
+fn run<B: Player, W: Player>(black: &mut B, white: &mut W, n: usize) -> Result<()> {
+    let mut players = DefaultPlayers::new(black, white);
+    let mut black = 0;
+    let mut white = 0;
+    let mut draw = 0;
+
+    for _ in 0..n {
         let count = players.run()?;
 
         match count.0.cmp(&count.1) {
@@ -33,12 +42,17 @@ fn main() -> Result<()> {
 
     }
 
-    println!("black: {}, draw: {}, white: {}", black, draw, white);
-    println!("human vs ai");
-    let (ai, _) = players.to();
-    let human = HumanPlayer::new();
-    let mut players = DefaultPlayers::new(human, ai);
-    let count = players.run()?;
-    println!("{} vs {}", count.0, count.1);
+    println!("black: {}, white: {}, draw: {}", black, white, draw);
+
+    println!("{}", match black.cmp(&white) {
+        Ordering::Greater => "Black Win",
+        Ordering::Equal => "Draw",
+        Ordering::Less => "White Win"
+    });
+
+    println!();
     return Result::Ok(());
 }
+
+// ai vs random, black: 5815, white: 3795, draw: 390, depth: 8, epoch: 16
+// ai vs random, black: 3767, white: 5841, draw: 392, depth: 8, epoch: 16

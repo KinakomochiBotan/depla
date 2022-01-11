@@ -1,5 +1,5 @@
 use super::{
-    super::Game,
+    Game,
     Player
 };
 

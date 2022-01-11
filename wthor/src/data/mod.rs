@@ -12,15 +12,6 @@ use othello::{
     Data as OthelloData
 };
 
-use pyo3::{
-    Python,
-    IntoPy,
-    Py,
-    types::PyTuple,
-};
-
-use numpy::IntoPyArray;
-
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Data {
     player: OthelloData,
@@ -72,11 +63,8 @@ impl Data {
         return Self::new(flip_diagonal(self.player), flip_diagonal(self.opponent), flip_diagonal(self.position));
     }
 
-}
-
-impl IntoPy<Py<PyTuple>> for Data {
     #[inline]
-    fn into_py(self, py: Python) -> Py<PyTuple> {
+    pub fn to(self) -> (Array3<f32>, Array2<f32>) {
         let mut data = Array3::<f32>::zeros((2, 8, 8));
         let mut label = Array2::<f32>::zeros((8, 8));
 
@@ -99,6 +87,7 @@ impl IntoPy<Py<PyTuple>> for Data {
             }
         }
 
-        return (data.into_pyarray(py), label.into_pyarray(py)).into_py(py);
+        return (data, label);
     }
+
 }

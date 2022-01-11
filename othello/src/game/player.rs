@@ -1,11 +1,3 @@
-mod human;
-mod random;
-
-pub use self::{
-    human::HumanPlayer,
-    random::RandomPlayer
-};
-
 use crate::Index;
 
 use super::{
@@ -20,29 +12,22 @@ pub trait Player {
     fn get_move(&mut self, game: &Game) -> Result<Index>;
 }
 
-pub struct DefaultPlayers<B, W> {
-    black: B,
-    white: W
+pub struct DefaultPlayers<'a, B, W> {
+    black: &'a mut B,
+    white: &'a mut W
 }
 
-impl<B, W> DefaultPlayers<B, W> {
-
+impl<'a, B, W> DefaultPlayers<'a, B, W> {
     #[inline]
-    pub fn new(black: B, white: W) -> Self {
+    pub fn new(black: &'a mut B, white: &'a mut W) -> Self {
         Self {
             black,
             white
         }
     }
-
-    #[inline]
-    pub fn to(self) -> (B, W) {
-        (self.black, self.white)
-    }
-
 }
 
-impl<B: Player, W: Player> Players for DefaultPlayers<B, W> {
+impl<'a, B: Player, W: Player> Players for DefaultPlayers<'a, B, W> {
     #[inline]
     fn get_move(&mut self, game: &Game) -> Result<Index> {
         match game.player_type {
