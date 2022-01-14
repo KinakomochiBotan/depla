@@ -3,11 +3,7 @@ mod data;
 mod players;
 mod parser;
 
-use crate::{
-    parser::Dataset as ParserDataset,
-    data::Dataset
-};
-
+use crate::data::Dataset;
 use anyhow::Result;
 
 use tokio::{
@@ -31,26 +27,17 @@ fn wthor(_: Python, module: &PyModule) -> PyResult<()> {
 
 #[pyo3::pyfunction]
 fn parse(python: Python, paths: Vec<String>) -> PyResult<&PyTuple> {
-    let length = paths.len();
     let runtime = Runtime::new()?;
-    let (sender, receiver) = tokio::sync::mpsc::channel(length);
-
-    for path in paths {
-        runtime.spawn(crate::parser::parse(path, sender.clone()));
-    }
-
+    let (sender, receiver) = tokio::sync::mpsc::channel(paths.len());
+    for path in paths { runtime.spawn(crate::parser::parse(path, sender.clone())); }
     std::mem::drop(sender);
 
     #[inline]
-    async fn collect(capacity: usize, mut receiver: Receiver<Result<ParserDataset>>) -> Result<Dataset> {
-        let mut result = Dataset::new(capacity);
-
-        while let Option::Some(data) = receiver.recv().await {
-            result.push(data?);
-        }
-
-        return Result::Ok(result);
+    async fn collect(mut receiver: Receiver<Result<Dataset>>) -> Result<Dataset> {
+        let mut result = Dataset::new();
+        while let Option::Some(data) = receiver.recv().await { result.append(data?); }
+        Result::Ok(result)
     }
 
-    return Result::Ok(runtime.block_on(collect(length, receiver))?.to(python)?);
+    Result::Ok(runtime.block_on(collect(receiver))?.to(python)?)
 }

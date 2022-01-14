@@ -1,18 +1,19 @@
-mod dataset;
+use crate::data::{
+    Data,
+    AugmentedData,
+    Dataset
+};
 
-pub use self::dataset::Dataset;
-use crate::data::Data;
 use std::array::IntoIter;
 use anyhow::Result;
 
 use othello::{
-    Index,
-    Data as OthelloData,
     game::{
-        PlayerType,
-        Game,
-        Players
-    }
+        Position,
+        DiscColor,
+        Game
+    },
+    players::Players
 };
 
 #[derive(Clone, Debug)]
@@ -44,17 +45,15 @@ impl WTHORPlayers {
 
 impl Players for WTHORPlayers {
     #[inline]
-    fn get_move(&mut self, game: &Game) -> Result<Index> {
+    fn get_move(&mut self, game: &Game) -> Result<Position> {
         let next = self.moves.next().unwrap();
-        let index = Index::at((next / 10 - 1) as usize, (next % 10 - 1) as usize).unwrap();
+        let position = Position::at((next / 10 - 1) as u32, (next % 10 - 1) as u32).unwrap();
 
-        if match game.player_type() {
-            PlayerType::Black => self.learn_black,
-            PlayerType::White => self.learn_white
-        } {
-            self.dataset.push(Data::new(game.board().player(), game.board().opponent(), OthelloData::of(0).set(index)));
-        }
+        if match game.color() {
+            DiscColor::Black => self.learn_black,
+            DiscColor::White => self.learn_white
+        } { self.dataset.push(AugmentedData::of(Data::new(game.board().player(), game.board().opponent(), position))); }
 
-        return Result::Ok(index);
+        Result::Ok(position)
     }
 }

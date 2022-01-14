@@ -4,7 +4,7 @@ use crate::ai::AI;
 use std::cmp::Ordering;
 use anyhow::Result;
 
-use othello::game::{
+use othello::players::{
     Players,
     Player,
     DefaultPlayers,
@@ -20,8 +20,8 @@ fn main() -> Result<()> {
     let mut human = HumanPlayer::new();
     println!("Human vs AI");
     println!();
-    run(&mut human, &mut ai, 10)?;
-    return Result::Ok(());
+    run(&mut human, &mut ai, 5)?;
+    Result::Ok(())
 }
 
 #[inline]
@@ -32,7 +32,7 @@ fn run<B: Player, W: Player>(black: &mut B, white: &mut W, n: usize) -> Result<(
     let mut draw = 0;
 
     for _ in 0..n {
-        let count = players.run()?;
+        let count = players.play()?;
 
         match count.0.cmp(&count.1) {
             Ordering::Greater => black += 1,
@@ -51,8 +51,5 @@ fn run<B: Player, W: Player>(black: &mut B, white: &mut W, n: usize) -> Result<(
     });
 
     println!();
-    return Result::Ok(());
+    Result::Ok(())
 }
-
-// ai vs random, black: 5815, white: 3795, draw: 390, depth: 8, epoch: 16
-// ai vs random, black: 3767, white: 5841, draw: 392, depth: 8, epoch: 16

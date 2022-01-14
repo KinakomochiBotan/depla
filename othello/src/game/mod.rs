@@ -1,20 +1,13 @@
-mod player;
-mod human;
-mod random;
+mod position;
+mod data;
+mod board;
+mod color;
 
 pub use self::{
-    player::{
-        Player,
-        DefaultPlayers
-    },
-    human::HumanPlayer,
-    random::RandomPlayer
-};
-
-use crate::{
-    Index,
-    Data,
-    Board
+    position::*,
+    data::*,
+    board::*,
+    color::*
 };
 
 use std::fmt::{
@@ -26,61 +19,35 @@ use std::fmt::{
 use anyhow::Result;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum PlayerType {
-    Black,
-    White
-}
-
-impl PlayerType {
-    #[inline]
-    fn next(&mut self) {
-        *self = match self {
-            Self::Black => Self::White,
-            Self::White => Self::Black
-        }
-    }
-}
-
-impl Display for PlayerType {
-    #[inline]
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", match self {
-            Self::Black => "Black",
-            Self::White => "White"
-        })
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Game {
     board: Board,
-    player_type: PlayerType
+    color: DiscColor
 }
 
 impl Game {
+    pub const BLACK: Data = unsafe { Data::of(0).set(Position::at_unchecked(3, 4)).set(Position::at_unchecked(4, 3)) };
+    pub const WHITE: Data = unsafe { Data::of(0).set(Position::at_unchecked(3, 3)).set(Position::at_unchecked(4, 4)) };
+    pub const BOARD: Board = unsafe { Board::of_unchecked(Self::BLACK, Self::WHITE) };
 
     #[inline]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            board: Board::of(
-                Data::of(0).set(Index::at(3, 4).unwrap()).set(Index::at(4, 3).unwrap()),
-                Data::of(0).set(Index::at(3, 3).unwrap()).set(Index::at(4, 4).unwrap())
-            ),
-            player_type: PlayerType::Black
+            board: Self::BOARD,
+            color: DiscColor::Black
         }
     }
 
     #[inline]
-    fn put(&mut self, index: Index) -> Result<()> {
-        self.board.put(index)?;
-        self.player_type.next();
-        return Result::Ok(());
+    pub fn put(&mut self, position: Position) -> Result<()> {
+        self.board.put(position)?;
+        self.color.flip();
+        Result::Ok(())
     }
 
     #[inline]
-    fn pass(&mut self) {
+    pub fn pass(&mut self) {
         self.board.pass();
-        self.player_type.next();
+        self.color.flip();
     }
 
     #[inline]
@@ -89,23 +56,23 @@ impl Game {
     }
 
     #[inline]
-    pub fn player_type(&self) -> PlayerType {
-        self.player_type
+    pub fn color(&self) -> DiscColor {
+        self.color
     }
 
     #[inline]
     pub fn black(&self) -> Data {
-        match self.player_type {
-            PlayerType::Black => self.board.player(),
-            PlayerType::White => self.board.opponent()
+        match self.color {
+            DiscColor::Black => self.board.player(),
+            DiscColor::White => self.board.opponent()
         }
     }
 
     #[inline]
     pub fn white(&self) -> Data {
-        match self.player_type {
-            PlayerType::Black => self.board.opponent(),
-            PlayerType::White => self.board.player()
+        match self.color {
+            DiscColor::Black => self.board.opponent(),
+            DiscColor::White => self.board.player()
         }
     }
 
@@ -124,9 +91,9 @@ impl Display for Game {
             write!(f, " {} |", row + 1)?;
 
             for column in 0..8 {
-                let index = Index::at(row, column).unwrap();
+                let position = unsafe { Position::at_unchecked(row, column) };
 
-                write!(f, " {}", match (black.is_set(index), white.is_set(index), legal.is_set(index))  {
+                write!(f, " {}", match (black.is_set(position), white.is_set(position), legal.is_set(position))  {
                     (true, _, _) => 'O',
                     (_, true, _) => 'X',
                     (_, _, true) => '*',
@@ -141,35 +108,6 @@ impl Display for Game {
 
         }
 
-        return Result::Ok(());
+        Result::Ok(())
     }
-}
-
-pub trait Players {
-    fn get_move(&mut self, game: &Game) -> Result<Index>;
-
-    #[inline]
-    fn run(&mut self) -> Result<(u32, u32)> where Self: Sized {
-        let mut game = Game::new();
-        let mut will_pass = false;
-
-        loop {
-
-            if game.board.legal().value() == 0 {
-                if will_pass {
-                    break;
-                } else {
-                    game.pass();
-                    will_pass = true;
-                    continue;
-                }
-            }
-
-            game.put(self.get_move(&game)?)?;
-            will_pass = false;
-        }
-
-        return Result::Ok((game.black().value().count_ones(), game.white().value().count_ones()));
-    }
-
 }

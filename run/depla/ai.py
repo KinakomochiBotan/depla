@@ -18,7 +18,7 @@ class AI:
         net.eval()
         print()
 
-    def guess(self, data: ndarray):
+    def guess(self, data: ndarray) -> ndarray:
         with torch.no_grad():
             output = self.__net(torch.from_numpy(data).to(self.__device))
             return output.cpu().detach().numpy()

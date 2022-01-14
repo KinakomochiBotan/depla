@@ -1,10 +1,5 @@
-mod index;
-mod data;
-mod board;
+pub mod bit;
 pub mod game;
 
-pub use self::{
-    index::Index,
-    data::Data,
-    board::Board
-};
+#[cfg(feature = "players")]
+pub mod players;

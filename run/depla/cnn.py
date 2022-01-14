@@ -1,30 +1,41 @@
 from typing import Any
 from torch import Tensor
-from torch.nn import Module, Conv2d, BatchNorm2d, Linear
+from torch.nn import Module, Conv2d, BatchNorm2d
 from torch.nn.functional import relu
 
 
 class CNN(Module):
-    def __init__(self, depth: int, middle_channels: int, middle_features: int, device: Any):
+    def __init__(self, device: Any):
         super(CNN, self).__init__()
+        self.__conv1: Conv2d = Conv2d(2, 128, 1, device=device)
+        self.__batch1: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv21: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch21: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv22: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch22: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv23: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch23: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv24: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch24: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv25: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch25: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv26: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch26: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv27: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch27: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv28: Conv2d = Conv2d(128, 128, 3, padding=1, device=device)
+        self.__batch28: BatchNorm2d = BatchNorm2d(128, device=device)
+        self.__conv3: Conv2d = Conv2d(128, 1, 1, device=device)
 
-        def create_conv(i: int):
-            return Conv2d(2 if i == 0 else middle_channels, middle_channels, 3, padding=1, device=device)
-
-        def create_batch():
-            return BatchNorm2d(middle_channels, device=device)
-
-        self.__blocks = tuple((create_conv(i), create_batch()) for i in range(depth))
-        self.__fc1 = Linear(middle_channels * 64, middle_features, device=device)
-        self.__fc2 = Linear(middle_features, 64, device=device)
-
-    def forward(self, x: Tensor):
-        for conv, batch in self.__blocks:
-            x = relu(batch(conv(x)))
-        x = x.flatten(1)
-        x = self.__fc1(x)
-        x = relu(x)
-        x = self.__fc2(x)
-        x = x.softmax(1)
-        x = x.view(-1, 8, 8)
-        return x
+    def forward(self, x: Tensor) -> Tensor:
+        x = relu(self.__batch1(self.__conv1(x)))
+        x = relu(self.__batch21(self.__conv21(x)))
+        x = relu(self.__batch22(self.__conv22(x)))
+        x = relu(self.__batch23(self.__conv23(x)))
+        x = relu(self.__batch24(self.__conv24(x)))
+        x = relu(self.__batch25(self.__conv25(x)))
+        x = relu(self.__batch26(self.__conv26(x)))
+        x = relu(self.__batch27(self.__conv27(x)))
+        x = relu(self.__batch28(self.__conv28(x)))
+        x = self.__conv3(x)
+        return x.flatten(1)

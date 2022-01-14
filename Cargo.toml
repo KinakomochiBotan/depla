@@ -18,3 +18,8 @@ features = ["auto-initialize"]
 
 [dependencies.othello]
 path = "othello"
+features = ["all"]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
