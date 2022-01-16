@@ -1,10 +1,16 @@
-use crate::data::{
-    Data,
-    AugmentedData,
-    Dataset
+use crate::{
+    data::{
+        Data,
+        Dataset
+    },
+    option::LoadOption
 };
 
-use std::array::IntoIter;
+use std::{
+    cmp::Ordering,
+    array::IntoIter
+};
+
 use anyhow::Result;
 
 use othello::{
@@ -27,13 +33,21 @@ pub struct WTHORPlayers {
 impl WTHORPlayers {
 
     #[inline]
-    pub fn new(discs: u8, moves: [u8; 60]) -> Self {
+    pub fn new(option: LoadOption, discs: u8, moves: [u8; 60]) -> Self {
+
+        let (learn_black, learn_white) = match discs.cmp(&32) {
+            Ordering::Greater => (option.load_win(), option.load_lose()),
+            Ordering::Equal => (option.load_draw(), option.load_draw()),
+            Ordering::Less => (option.load_lose(), option.load_win())
+        };
+
         Self {
-            learn_black: discs >= 32,
-            learn_white: discs <= 32,
+            learn_black,
+            learn_white,
             moves: moves.into_iter(),
-            dataset: Dataset::new()
+            dataset: Dataset::new(option.load_unique())
         }
+
     }
 
     #[inline]
@@ -52,7 +66,7 @@ impl Players for WTHORPlayers {
         if match game.color() {
             DiscColor::Black => self.learn_black,
             DiscColor::White => self.learn_white
-        } { self.dataset.push(AugmentedData::of(Data::new(game.board().player(), game.board().opponent(), position))); }
+        } { self.dataset.push(Data::new(game.board().player(), game.board().opponent(), position)); }
 
         Result::Ok(position)
     }

@@ -1,10 +1,6 @@
-mod augmented;
 mod set;
 
-pub use self::{
-    augmented::*,
-    set::*
-};
+pub use self::set::*;
 
 use ndarray::Array3;
 
