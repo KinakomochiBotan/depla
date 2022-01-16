@@ -14,6 +14,7 @@ use pyo3::{
 #[pyo3::pyclass]
 pub struct LoadOption {
     unique: bool,
+    augmentation: bool,
     win: bool,
     draw: bool,
     lose: bool
@@ -22,13 +23,13 @@ pub struct LoadOption {
 impl LoadOption {
 
     #[inline]
-    pub fn check_valid(&self) -> bool {
-        self.win || self.draw || self.lose
+    pub fn load_unique(&self) -> bool {
+        self.unique
     }
 
     #[inline]
-    pub fn load_unique(&self) -> bool {
-        self.unique
+    pub fn load_augmentation(&self) -> bool {
+        self.augmentation
     }
 
     #[inline]
@@ -46,6 +47,11 @@ impl LoadOption {
         self.lose
     }
 
+    #[inline]
+    pub fn check_valid(&self) -> bool {
+        self.win || self.draw || self.lose
+    }
+
 }
 
 #[pyo3::pymethods]
@@ -55,6 +61,7 @@ impl LoadOption {
     fn new() -> Self {
         Self {
             unique: false,
+            augmentation: false,
             win: false,
             draw: false,
             lose: false
@@ -63,6 +70,11 @@ impl LoadOption {
 
     fn unique(mut this: PyRefMut<Self>) -> PyRefMut<Self> {
         this.unique = true;
+        this
+    }
+
+    fn augmentation(mut this: PyRefMut<Self>) -> PyRefMut<Self> {
+        this.augmentation = true;
         this
     }
 
@@ -86,7 +98,7 @@ impl LoadOption {
 impl Display for LoadOption {
     #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "(unique: {}, win: {}, draw: {}, lose: {})", self.unique, self.win, self.draw, self.lose)
+        write!(f, "(unique: {}, augmentation: {}, win: {}, draw: {}, lose: {})", self.unique, self.augmentation, self.win, self.draw, self.lose)
     }
 }
 

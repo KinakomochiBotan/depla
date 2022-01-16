@@ -1,0 +1,11 @@
+[package]
+name = "launcher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.52"
+
+[dependencies.pyo3]
+version = "0.15.1"
+features = ["auto-initialize", "anyhow"]

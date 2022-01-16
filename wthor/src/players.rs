@@ -26,6 +26,7 @@ use othello::{
 pub struct WTHORPlayers {
     learn_black: bool,
     learn_white: bool,
+    augmentation: bool,
     moves: IntoIter<u8, 60>,
     dataset: Dataset
 }
@@ -44,10 +45,34 @@ impl WTHORPlayers {
         Self {
             learn_black,
             learn_white,
+            augmentation: option.load_augmentation(),
             moves: moves.into_iter(),
             dataset: Dataset::new(option.load_unique())
         }
 
+    }
+
+    #[inline]
+    fn add(&mut self, data: Data) {
+        match self.augmentation {
+            true => {
+                let mut data = [data; 8];
+                data[4] = data[4].flip_diagonal();
+                data[5] = data[4];
+                data[6] = data[4];
+                data[7] = data[4];
+                data[2] = data[2].rotate180();
+                data[3] = data[2];
+                data[6] = data[6].rotate180();
+                data[7] = data[6];
+                data[1] = data[1].flip_vertical();
+                data[3] = data[3].flip_vertical();
+                data[5] = data[5].flip_vertical();
+                data[7] = data[7].flip_vertical();
+                self.dataset.extend(data);
+            },
+            false => self.dataset.push(data)
+        }
     }
 
     #[inline]
@@ -66,7 +91,7 @@ impl Players for WTHORPlayers {
         if match game.color() {
             DiscColor::Black => self.learn_black,
             DiscColor::White => self.learn_white
-        } { self.dataset.push(Data::new(game.board().player(), game.board().opponent(), position)); }
+        } { self.add(Data::new(game.board().player(), game.board().opponent(), position)); }
 
         Result::Ok(position)
     }

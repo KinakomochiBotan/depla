@@ -39,25 +39,18 @@ impl Container {
 
     #[inline]
     fn push(&mut self, data: Data) {
-        let mut data = [data; 8];
-        data[4] = data[4].flip_diagonal();
-        data[5] = data[4];
-        data[6] = data[4];
-        data[7] = data[4];
-        data[2] = data[2].rotate180();
-        data[3] = data[2];
-        data[6] = data[6].rotate180();
-        data[7] = data[6];
-        data[1] = data[1].flip_vertical();
-        data[3] = data[3].flip_vertical();
-        data[5] = data[5].flip_vertical();
-        data[7] = data[7].flip_vertical();
+        match self {
+            Self::Origin(vec) => vec.push(data),
+            Self::Unique(set) => { set.insert(data); }
+        }
+    }
 
+    #[inline]
+    fn extend<const N: usize>(&mut self, data: [Data; N]) {
         match self {
             Self::Origin(vec) => vec.extend(data),
             Self::Unique(set) => set.extend(data)
         }
-
     }
 
     #[inline]
@@ -148,6 +141,11 @@ impl Dataset {
     #[inline]
     pub fn push(&mut self, data: Data) {
         self.container.push(data);
+    }
+
+    #[inline]
+    pub fn extend<const N: usize>(&mut self, data: [Data; N]) {
+        self.container.extend(data);
     }
 
     #[inline]
