@@ -22,7 +22,7 @@ fn main() -> Result<()> {
     #[inline]
     fn run(python: Python, number: u32) -> Result<()> {
         python.import("sys")?.getattr("path")?.call_method1("append", (".",))?;
-        python.import("depla")?.call_method0(&format!("ex{}", number))?;
+        python.import("depla")?.call_method0(&format!("Experiment{}", number))?.call_method0("run")?;
         Result::Ok(())
     }
 

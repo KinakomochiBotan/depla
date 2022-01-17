@@ -1,4 +1,9 @@
-use anyhow::Result;
+use std::path::PathBuf;
+
+use anyhow::{
+    Result,
+    anyhow
+};
 
 use ndarray::{
     Array2,
@@ -21,8 +26,7 @@ use othello::{
 use pyo3::{
     Python,
     Py,
-    PyAny,
-    types::IntoPyDict
+    PyAny
 };
 
 use numpy::{
@@ -30,39 +34,63 @@ use numpy::{
     IntoPyArray
 };
 
-#[derive(Debug)]
-pub struct AI<R> {
-    ai: Py<PyAny>,
-    rng: R,
-    buffer: Vec<Position>
+#[derive(Clone, Debug)]
+pub struct AIFactory {
+    device: Py<PyAny>,
+    load: Py<PyAny>
 }
 
-impl<R> AI<R> {
+impl AIFactory {
+
     #[inline]
-    pub fn new(rng: R) -> Result<Self> {
+    pub fn new(device: &str) -> Result<Self> {
+        std::env::set_current_dir("run")?;
 
         #[inline]
-        fn get_ai(python: Python) -> Result<Py<PyAny>> {
-            python.import("sys")?.getattr("path")?.call_method1("append", ("run",))?;
-            let torch = python.import("torch")?;
-            let depla = python.import("depla")?;
-            let device = torch.call_method1("device", ("cuda",))?;
-            let cnn = depla.call_method1("CNN", (device,))?;
-            let dataset = depla.call_method1("Dataset", ((2010..=2019).map(|year| format!("run/wthor/WTH_{}.wtb", year)).collect::<Vec<_>>(),))?;
-            let loader = torch.getattr("utils")?.getattr("data")?.call_method("DataLoader", (dataset, 2048, true), Option::Some(vec![("drop_last", true)].into_py_dict(python)))?;
-            let criterion = torch.getattr("nn")?.call_method0("CrossEntropyLoss")?;
-            let optimizer = torch.getattr("optim")?.call_method("SGD", (cnn.call_method0("parameters")?, 0.01, 0.95), Option::Some(vec![("weight_decay", 0.0005)].into_py_dict(python)))?;
-            let ai = depla.call_method1("AI", (cnn, loader, 8, criterion, optimizer, device))?;
-            Result::Ok(Py::from(ai))
+        fn initialize(python: Python, device: &str) -> Result<(Py<PyAny>, Py<PyAny>)> {
+            python.import("sys")?.getattr("path")?.call_method1("append", (".",))?;
+            let device = python.import("torch")?.call_method1("device", (device,))?;
+            let load = python.import("depla")?.getattr("CNN")?.getattr("load")?;
+            Result::Ok((Py::from(device), Py::from(load)))
         }
 
+        let (device, load) = Python::with_gil(|python| initialize(python, device))?;
+
         Result::Ok(Self {
-            ai: Python::with_gil(|python| get_ai(python))?,
+            device,
+            load
+        })
+
+    }
+
+    #[inline]
+    pub fn create<R: Rng>(&self, experiment: u32, sub_experiment: Option<u32>, rng: R) -> Result<AI<R>> {
+        let mut path = PathBuf::new();
+        path.push("result");
+        path.push(experiment.to_string());
+        if let Option::Some(sub_experiment) = sub_experiment { path.push(sub_experiment.to_string()); }
+        path.push("cnn.pt");
+
+        #[inline]
+        fn load_ai(python: Python, load: &Py<PyAny>, path: &str, device: &Py<PyAny>) -> Result<Py<PyAny>> {
+            Result::Ok(load.call1(python, (path, device))?.getattr(python, "guess")?)
+        }
+
+        Result::Ok(AI {
+            guess: Python::with_gil(|python| load_ai(python, &self.load, path.to_str().ok_or_else(|| anyhow!("failed to generate a path"))?, &self.device))?,
             rng,
             buffer: Vec::new()
         })
 
     }
+
+}
+
+#[derive(Debug)]
+pub struct AI<R> {
+    guess: Py<PyAny>,
+    rng: R,
+    buffer: Vec<Position>
 }
 
 impl<R: Rng> Player for AI<R> {
@@ -78,11 +106,11 @@ impl<R: Rng> Player for AI<R> {
         });
 
         #[inline]
-        fn get_output(python: Python, ai: &Py<PyAny>, data: Array4<f32>) -> Result<Array2<f32>> {
-            Result::Ok(ai.call_method1(python, "guess", (data.into_pyarray(python),))?.extract::<&PyArray2<f32>>(python)?.to_owned_array())
+        fn get_output(python: Python, guess: &Py<PyAny>, data: Array4<f32>) -> Result<Array2<f32>> {
+            Result::Ok(guess.call1(python, (data.into_pyarray(python),))?.extract::<&PyArray2<f32>>(python)?.to_owned_array())
         }
 
-        let output: Array2<f32> = Python::with_gil(|python| get_output(python, &self.ai, data))?;
+        let output: Array2<f32> = Python::with_gil(|python| get_output(python, &self.guess, data))?;
         self.buffer.clear();
         let legal = game.board().legal();
         let mut max = f32::NEG_INFINITY;

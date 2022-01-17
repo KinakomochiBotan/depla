@@ -1,6 +1,6 @@
 mod ai;
 
-use crate::ai::AI;
+use crate::ai::AIFactory;
 use std::cmp::Ordering;
 use anyhow::Result;
 
@@ -13,7 +13,8 @@ use othello::players::{
 };
 
 fn main() -> Result<()> {
-    let mut ai = AI::new(rand::thread_rng())?;
+    let factory = AIFactory::new("cuda")?;
+    let mut ai = factory.create(2, Option::None, rand::thread_rng())?;
     let mut random = RandomPlayer::new(rand::thread_rng());
     println!("AI vs Random Player");
     run(&mut ai, &mut random, 10000)?;

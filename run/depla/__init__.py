@@ -1,5 +1,3 @@
-from .cnn import CNN, Depth
+from .cnn import CNN
 from .dataset import Dataset
-from .ai import train
-from .utils import get_path, wthor_paths, save_net, load_net, save_png
-from .experiment import ex1
+from .experiment import Experiment, DatasetSetting, AISetting, Experiment1, Experiment2
