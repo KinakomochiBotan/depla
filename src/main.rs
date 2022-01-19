@@ -14,14 +14,14 @@ use othello::players::{
 
 fn main() -> Result<()> {
     let factory = AIFactory::new("cuda")?;
-    let mut ai = factory.create(2, Option::None, rand::thread_rng())?;
+    let mut ai = factory.create(3, Option::None, rand::thread_rng())?;
     let mut random = RandomPlayer::new(rand::thread_rng());
     println!("AI vs Random Player");
     run(&mut ai, &mut random, 10000)?;
     let mut human = HumanPlayer::new();
     println!("Human vs AI");
     println!();
-    run(&mut human, &mut ai, 5)?;
+    run(&mut ai, &mut human, 1)?;
     Result::Ok(())
 }
 

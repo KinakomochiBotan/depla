@@ -6,13 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.52"
 
-[dependencies.rand]
-version = "0.8.4"
-optional = true
-
 [features]
-players = []
-player = ["players"]
-human = ["player"]
-random = ["player", "rand"]
-all = ["players", "player", "human", "random"]
+api = []
+processor = ["api"]

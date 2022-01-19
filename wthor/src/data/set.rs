@@ -13,8 +13,8 @@ use anyhow::Result;
 use pyo3::{
     Python,
     IntoPy,
-    IntoPyPointer,
     FromPyPointer,
+    IntoPyPointer,
     types::PyTuple,
     ffi::Py_ssize_t
 };
@@ -22,68 +22,67 @@ use pyo3::{
 use numpy::IntoPyArray;
 
 #[derive(Clone, Debug)]
-enum Container {
-    Origin(Vec<Data>),
-    Unique(HashSet<Data>)
+pub struct Dataset {
+    collection: Collection,
+    unique: bool,
+    augmentation: bool
 }
 
-impl Container {
+impl Dataset {
 
     #[inline]
-    fn new(unique: bool) -> Self {
-        match unique {
-            true => Self::Unique(HashSet::new()),
-            false => Self::Origin(Vec::new())
-        }
-    }
-
-    #[inline]
-    fn push(&mut self, data: Data) {
-        match self {
-            Self::Origin(vec) => vec.push(data),
-            Self::Unique(set) => { set.insert(data); }
-        }
-    }
-
-    #[inline]
-    fn extend<const N: usize>(&mut self, data: [Data; N]) {
-        match self {
-            Self::Origin(vec) => vec.extend(data),
-            Self::Unique(set) => set.extend(data)
-        }
-    }
-
-    #[inline]
-    fn append(&mut self, other: Self) {
-        match self {
-            Self::Origin(vec) => match other {
-                Self::Origin(mut other) => vec.append(&mut other),
-                Self::Unique(other) => vec.extend(other)
+    pub fn new(unique: bool, augmentation: bool) -> Self {
+        Self {
+            collection: match unique {
+                true => Collection::Unique(HashSet::new()),
+                false => Collection::Origin(Vec::new())
             },
-            Self::Unique(set) => match other {
-                Self::Origin(other) => set.extend(other),
-                Self::Unique(other) => set.extend(other)
-            }
+            unique,
+            augmentation
         }
     }
 
     #[inline]
-    fn len(&self) -> usize {
-        match self {
-            Self::Origin(vec) => vec.len(),
-            Self::Unique(set) => set.len()
+    pub fn push(&mut self, data: Data) {
+        match (&mut self.collection, self.augmentation) {
+            (Collection::Origin(vec), true) => vec.extend(data.augment()),
+            (Collection::Origin(vec), false) => vec.push(data),
+            (Collection::Unique(set), true) => set.extend(data.augment()),
+            (Collection::Unique(set), false) => set.insert(data)
         }
     }
 
     #[inline]
-    fn to(self, python: Python) -> Result<&PyTuple> {
-        let result = unsafe { pyo3::ffi::PyTuple_New(self.len() as Py_ssize_t) };
-        let to_tensor = python.import("torch")?.getattr("from_numpy")?;
+    pub fn append(&mut self, other: Self) {
+        match (&mut self.collection, other.collection) {
+            (Collection::Origin(vec), Collection::Origin(mut other)) => vec.append(&mut other),
+            (Collection::Origin(vec), Collection::Unique(other)) => vec.extend(other),
+            (Collection::Unique(set), Collection::Origin(other)) => set.extend(other),
+            (Collection::Unique(set), Collection::Unique(other)) => set.extend(other)
+        }
+    }
 
-        for (index, (data, label)) in self.into_iter().map(|data| data.to()).enumerate() {
+    #[inline]
+    pub fn child(&self) -> Self {
+        Self::new(self.unique, self.augmentation)
+    }
+
+    #[inline]
+    pub fn into(self, python: Python) -> Result<&PyTuple> {
+
+        let result = unsafe {
+            pyo3::ffi::PyTuple_New(match &self.collection {
+                Collection::Origin(vec) => vec.len(),
+                Collection::Unique(set) => set.len()
+            } as Py_ssize_t)
+        };
+
+        let tensor = python.import("torch")?.getattr("from_numpy")?;
+
+        for (index, (data, label)) in self.collection.into_iter().map(|data| data.into()).enumerate() {
             unsafe {
                 let tuple = pyo3::ffi::PyTuple_New(2);
-                pyo3::ffi::PyTuple_SetItem(tuple, 0, to_tensor.call1((data.into_pyarray(python),))?.into_ptr());
+                pyo3::ffi::PyTuple_SetItem(tuple, 0, tensor.call1((data.into_pyarray(python),))?.into_ptr());
                 pyo3::ffi::PyTuple_SetItem(tuple, 1, label.into_py(python).into_ptr());
                 pyo3::ffi::PyTuple_SetItem(result, index as Py_ssize_t, tuple);
             }
@@ -94,9 +93,14 @@ impl Container {
 
 }
 
-impl IntoIterator for Container {
+enum Collection {
+    Origin(Vec<Data>),
+    Unique(HashSet<Data>)
+}
+
+impl IntoIterator for Collection {
     type Item = Data;
-    type IntoIter = ContainerIterator;
+    type IntoIter = CollectionIterator;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
@@ -108,12 +112,12 @@ impl IntoIterator for Container {
 
 }
 
-enum ContainerIterator {
+enum CollectionIterator {
     Origin(VecIterator<Data>),
     Unique(SetIterator<Data>)
 }
 
-impl Iterator for ContainerIterator {
+impl Iterator for CollectionIterator {
     type Item = Data;
 
     #[inline]
@@ -122,40 +126,6 @@ impl Iterator for ContainerIterator {
             Self::Origin(vec) => vec.next(),
             Self::Unique(set) => set.next()
         }
-    }
-
-}
-
-#[derive(Clone, Debug)]
-pub struct Dataset {
-    container: Container
-}
-
-impl Dataset {
-
-    #[inline]
-    pub fn new(unique: bool) -> Self {
-        Self { container: Container::new(unique) }
-    }
-
-    #[inline]
-    pub fn push(&mut self, data: Data) {
-        self.container.push(data);
-    }
-
-    #[inline]
-    pub fn extend<const N: usize>(&mut self, data: [Data; N]) {
-        self.container.extend(data);
-    }
-
-    #[inline]
-    pub fn append(&mut self, other: Self) {
-        self.container.append(other.container)
-    }
-
-    #[inline]
-    pub fn to(self, python: Python) -> Result<&PyTuple> {
-        self.container.to(python)
     }
 
 }

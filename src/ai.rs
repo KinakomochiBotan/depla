@@ -16,7 +16,7 @@ use rand::{
 };
 
 use othello::{
-    game::{
+    api::{
         Position,
         Game
     },

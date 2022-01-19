@@ -18,7 +18,7 @@ features = ["auto-initialize", "anyhow"]
 
 [dependencies.othello]
 path = "othello"
-features = ["all"]
+features = ["api", "processor"]
 
 [profile.release]
 lto = "fat"

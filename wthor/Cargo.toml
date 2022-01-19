@@ -14,7 +14,7 @@ numpy = "0.15.1"
 
 [dependencies.othello]
 path = "../othello"
-features = ["players"]
+features = ["api", "processor"]
 
 [dependencies.tokio]
 version = "1.15.0"

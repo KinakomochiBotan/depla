@@ -1,5 +1,7 @@
 pub mod bit;
-pub mod game;
 
-#[cfg(feature = "players")]
-pub mod players;
+#[cfg(feature = "api")]
+pub mod api;
+
+#[cfg(feature = "processor")]
+pub mod processor;

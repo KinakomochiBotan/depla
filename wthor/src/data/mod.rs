@@ -4,12 +4,12 @@ pub use self::set::*;
 
 use ndarray::Array3;
 
-use othello::game::{
+use othello::api::{
     Position,
     Data as OthelloData
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Data {
     player: OthelloData,
     opponent: OthelloData,
@@ -20,50 +20,46 @@ impl Data {
 
     #[inline]
     pub fn new(player: OthelloData, opponent: OthelloData, position: Position) -> Self {
-        Self {
-            player,
-            opponent,
-            position
-        }
+        Self { player, opponent, position }
     }
 
     #[inline]
-    pub fn flip_vertical(&self) -> Self {
-        let calc_data = |data: OthelloData| OthelloData::of(data.value().swap_bytes());
+    fn flip_vertical(self) -> Self {
+        let calc_data = |data: OthelloData| OthelloData::of(crate::bit::flip_vertical(data.value()));
         let calc_position = |position: Position| unsafe { Position::at_unchecked(7 - position.row(), position.column()) };
         Self::new(calc_data(self.player), calc_data(self.opponent), calc_position(self.position))
     }
 
     #[inline]
-    pub fn rotate180(&self) -> Self {
-        let calc_data = |data: OthelloData| OthelloData::of(data.value().reverse_bits());
+    fn rotate180(self) -> Self {
+        let calc_data = |data: OthelloData| OthelloData::of(crate::bit::rotate180(data.value()));
         let calc_position = |position: Position| unsafe { Position::at_unchecked(7 - position.row(), 7 - position.column()) };
         Self::new(calc_data(self.player), calc_data(self.opponent), calc_position(self.position))
     }
 
     #[inline]
-    pub fn flip_diagonal(&self) -> Self {
-
-        #[inline]
-        const fn flip_diagonal(data: u64) -> u64 {
-            let mut result = data;
-
-            macro_rules! calc {
-                ($n:literal, $m:literal) => {
-                    let mask = $m & (result ^ (result << $n));
-                    result ^= mask ^ (mask >> $n);
-                };
-            }
-
-            calc!(28, 0x0f0f0f0f00000000);
-            calc!(14, 0x3333000033330000);
-            calc!(07, 0x5500550055005500);
-            return result;
-        }
-
-        let calc_data = |data: OthelloData| OthelloData::of(flip_diagonal(data.value()));
+    fn flip_diagonal(self) -> Self {
+        let calc_data = |data: OthelloData| OthelloData::of(crate::bit::flip_diagonal(data.value()));
         let clac_position = |position: Position| unsafe { Position::at_unchecked(position.column(), position.row()) };
         Self::new(calc_data(self.player), calc_data(self.opponent), clac_position(self.position))
+    }
+
+    #[inline]
+    pub fn augment(self) -> [Self; 8] {
+        let result = [self; 8];
+        data[4] = data[4].flip_diagonal();
+        data[5] = data[4];
+        data[6] = data[4];
+        data[7] = data[4];
+        data[2] = data[2].rotate180();
+        data[3] = data[2];
+        data[6] = data[6].rotate180();
+        data[7] = data[6];
+        data[1] = data[1].flip_vertical();
+        data[3] = data[3].flip_vertical();
+        data[5] = data[5].flip_vertical();
+        data[7] = data[7].flip_vertical();
+        result
     }
 
     #[inline]
@@ -75,7 +71,7 @@ impl Data {
             if self.opponent.is_set(position) { data[(1, position.row() as usize, position.column() as usize)] = 1.0; }
         });
 
-        (data, self.position.value() as u32)
+        (data, self.position.value())
     }
 
 }
