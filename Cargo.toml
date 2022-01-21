@@ -4,22 +4,28 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["othello", "wthor", "launcher"]
+members = [
+    "othello",
+    "wthor",
+    "ai",
+    "colosseum",
+    "launcher"
+]
 
 [dependencies]
 anyhow = "1.0.52"
-rand = "0.8.4"
-ndarray = "0.15.4"
-numpy = "0.15.1"
 
 [dependencies.pyo3]
 version = "0.15.1"
-features = ["auto-initialize", "anyhow"]
+features = ["auto-initialize"]
 
 [dependencies.othello]
 path = "othello"
 features = ["api", "processor"]
 
+[dependencies.ai]
+path = "ai"
+
 [profile.release]
-lto = "fat"
+lto = true
 codegen-units = 1

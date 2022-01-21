@@ -12,7 +12,10 @@ use std::{
     array::IntoIter
 };
 
-use anyhow::Result;
+use anyhow::{
+    Result,
+    Context as _
+};
 
 use othello::{
     api::{
@@ -61,7 +64,7 @@ impl WTHORMoves {
 impl Moves for WTHORMoves {
     #[inline]
     fn get_move(&mut self, game: &Game) -> Result<Position> {
-        let next = self.moves.next()?;
+        let next = self.moves.next().context("no more moves")?;
         let position = Position::at((next / 10 - 1) as u32, (next % 10 - 1) as u32)?;
 
         if match game.color() {

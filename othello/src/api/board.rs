@@ -14,7 +14,7 @@ use anyhow::{
     ensure
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Board {
     player: Data,
     opponent: Data,

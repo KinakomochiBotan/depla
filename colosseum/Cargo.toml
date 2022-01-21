@@ -1,0 +1,25 @@
+[package]
+name = "colosseum"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "colosseum"
+crate-type = ["cdylib"]
+
+[dependencies]
+anyhow = "1.0.52"
+rand = "0.8.4"
+ndarray = "0.15.4"
+numpy = "0.15.1"
+
+[dependencies.othello]
+path = "../othello"
+features = ["api", "processor"]
+
+[dependencies.ai]
+path = "../ai"
+
+[dependencies.pyo3]
+version = "0.15.1"
+features = ["extension-module", "anyhow"]

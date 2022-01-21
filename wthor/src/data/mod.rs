@@ -46,24 +46,24 @@ impl Data {
 
     #[inline]
     pub fn augment(self) -> [Self; 8] {
-        let result = [self; 8];
-        data[4] = data[4].flip_diagonal();
-        data[5] = data[4];
-        data[6] = data[4];
-        data[7] = data[4];
-        data[2] = data[2].rotate180();
-        data[3] = data[2];
-        data[6] = data[6].rotate180();
-        data[7] = data[6];
-        data[1] = data[1].flip_vertical();
-        data[3] = data[3].flip_vertical();
-        data[5] = data[5].flip_vertical();
-        data[7] = data[7].flip_vertical();
+        let mut result = [self; 8];
+        result[4] = result[4].flip_diagonal();
+        result[5] = result[4];
+        result[6] = result[4];
+        result[7] = result[4];
+        result[2] = result[2].rotate180();
+        result[3] = result[2];
+        result[6] = result[6].rotate180();
+        result[7] = result[6];
+        result[1] = result[1].flip_vertical();
+        result[3] = result[3].flip_vertical();
+        result[5] = result[5].flip_vertical();
+        result[7] = result[7].flip_vertical();
         result
     }
 
     #[inline]
-    pub fn to(self) -> (Array3<f32>, u32) {
+    pub fn into(self) -> (Array3<f32>, u32) {
         let mut data = Array3::<f32>::zeros((2, 8, 8));
 
         Position::iter().for_each(|position| {

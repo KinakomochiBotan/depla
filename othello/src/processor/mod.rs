@@ -1,6 +1,10 @@
 mod moves;
+mod player;
 
-pub use self::moves::*;
+pub use self::{
+    moves::*,
+    player::*
+};
 
 use crate::api::Game;
 use anyhow::Result;

@@ -1,19 +1,21 @@
-from abc import ABC
-from wthor import LoadOption
-from . import Experiment, DatasetSetting, AISetting
+from . import Experiment
 
 
-class Experiment1(Experiment, ABC):
+class Experiment1(Experiment):
     def __init__(self):
-        super(Experiment1, self).__init__(1)
-
-    @property
-    def _datasets(self):
-        return (
-            DatasetSetting(2010, 2018, LoadOption().win().draw().lose()),
-            DatasetSetting(2019, 2019, LoadOption().win().draw().lose())
+        super(Experiment1, self).__init__(
+            '1',
+            (
+                2001,
+                2019,
+                True,
+                True,
+                True,
+                False,
+                False
+            ),
+            (
+                8,
+                8
+            )
         )
-
-    @property
-    def _ais(self):
-        return AISetting(4, 0, 1, 4, True),

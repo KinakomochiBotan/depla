@@ -8,18 +8,17 @@ use std::{
     }
 };
 
-use anyhow::Result;
-
 use pyo3::{
     Python,
-    IntoPy,
-    FromPyPointer,
-    IntoPyPointer,
+    PyResult,
+    IntoPy as _,
+    FromPyPointer as _,
+    IntoPyPointer as _,
     types::PyTuple,
     ffi::Py_ssize_t
 };
 
-use numpy::IntoPyArray;
+use numpy::IntoPyArray as _;
 
 #[derive(Clone, Debug)]
 pub struct Dataset {
@@ -48,7 +47,7 @@ impl Dataset {
             (Collection::Origin(vec), true) => vec.extend(data.augment()),
             (Collection::Origin(vec), false) => vec.push(data),
             (Collection::Unique(set), true) => set.extend(data.augment()),
-            (Collection::Unique(set), false) => set.insert(data)
+            (Collection::Unique(set), false) => { set.insert(data); }
         }
     }
 
@@ -68,7 +67,7 @@ impl Dataset {
     }
 
     #[inline]
-    pub fn into(self, python: Python) -> Result<&PyTuple> {
+    pub fn into(self, python: Python) -> PyResult<&PyTuple> {
 
         let result = unsafe {
             pyo3::ffi::PyTuple_New(match &self.collection {
@@ -88,11 +87,12 @@ impl Dataset {
             }
         }
 
-        Result::Ok(unsafe { PyTuple::from_owned_ptr(python, result) })
+        PyResult::Ok(unsafe { PyTuple::from_owned_ptr(python, result) })
     }
 
 }
 
+#[derive(Clone, Debug)]
 enum Collection {
     Origin(Vec<Data>),
     Unique(HashSet<Data>)
@@ -112,6 +112,7 @@ impl IntoIterator for Collection {
 
 }
 
+#[derive(Debug)]
 enum CollectionIterator {
     Origin(VecIterator<Data>),
     Unique(SetIterator<Data>)

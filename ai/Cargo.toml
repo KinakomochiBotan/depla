@@ -1,0 +1,16 @@
+[package]
+name = "ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.52"
+ndarray = "0.15.4"
+numpy = "0.15.1"
+
+[dependencies.othello]
+path = "../othello"
+features = ["api", "processor"]
+
+[dependencies.pyo3]
+version = "0.15.1"

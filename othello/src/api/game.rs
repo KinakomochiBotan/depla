@@ -83,7 +83,7 @@ impl Display for Game {
         let black = self.black();
         let white = self.white();
         let legal = self.board.legal();
-        writeln!(f, "   | a b c d e f g h")?;
+        writeln!(f, "   | A B C D E F G H")?;
         writeln!(f, "---|-----------------")?;
 
         for row in 0..8 {
