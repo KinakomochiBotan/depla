@@ -28,10 +28,10 @@ fn main() -> Result<()> {
     let factory = AIFactory::new("cuda")?;
     let mut ai = factory.create(&experiment)?;
     let mut players = PlayersMoves::new(&mut human, &mut ai);
-    let (black, white) = othello::processor::play(&mut players)?;
-    println!("{black} vs {white}");
+    let (human, ai) = othello::processor::play(&mut players)?;
+    println!("{human} and {ai}");
 
-    println!("{}", match black.cmp(&white) {
+    println!("{}", match human.cmp(&ai) {
         Ordering::Greater => "Player Win",
         Ordering::Equal => "Draw",
         Ordering::Less => "AI Win"
