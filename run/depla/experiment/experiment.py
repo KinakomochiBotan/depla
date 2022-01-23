@@ -66,15 +66,15 @@ class Experiment:
         )
 
         cnn.save(path / 'cnn.pt')
-        file.write('time: %s\n' % time)
+        file.write(str(time) + '\n')
         Experiment.__save_png(path / 'loss.png', loss_history, 400)
         Experiment.__save_png(path / 'accuracy.png', accuracy_history, 400)
         print("test1")
-        file.write('test1: %f\n' % Experiment.__test(device, cnn, test_loader_1))
+        file.write(str(Experiment.__test(device, cnn, test_loader_1)) + '\n')
         print("test2")
-        file.write('test2: %f\n' % Experiment.__test(device, cnn, test_loader_2))
-        print('vs random player')
-        file.write('AI: %d, draw: %d, random: %d)\n' % vs_random(cnn, 10000))
+        file.write(str(Experiment.__test(device, cnn, test_loader_2)) + '\n')
+        print('random')
+        file.write("%s\n%s\n" % vs_random(cnn, 10000))
         file.close()
 
     @staticmethod

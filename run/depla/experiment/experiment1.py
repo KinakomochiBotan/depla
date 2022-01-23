@@ -6,16 +6,16 @@ class Experiment1(Experiment):
         super(Experiment1, self).__init__(
             '1',
             (
-                2001,
+                2010,
                 2019,
-                True,
-                True,
-                True,
                 False,
-                False
+                False,
+                True,
+                True,
+                True
             ),
             (
-                8,
-                8
+                4,
+                4
             )
         )
