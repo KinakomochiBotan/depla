@@ -5,7 +5,7 @@
 学習データ: [La base WTHOR][WTHOR]
 
 
-## depla crate
+## コード
 
 AIとの対戦の実装
 
