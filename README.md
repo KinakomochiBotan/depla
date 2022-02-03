@@ -1,5 +1,5 @@
 # depla
-Deep Learning Othello AI
+畳込みニューラルネットワークを用いたオセロAIです。
+学習には[La base WTHOR][WTHOR]を用いています。
 
-## La base WTHOR
-https://www.ffothello.org/informatique/la-base-wthor
+[WTHOR]:https://www.ffothello.org/informatique/la-base-wthor
