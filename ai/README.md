@@ -1,1 +1,3 @@
 # ai
+
+PythonのCNNクラスをRustから扱えるようにします。
